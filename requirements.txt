@@ -1,0 +1,6 @@
+flask==3.0.2
+onnxruntime==1.18.0
+pillow==10.3.0
+prometheus_client==0.20.0
+psutil==5.9.8
+numpy==1.26.4
