@@ -46,7 +46,7 @@ jobs:
     # 4. 构建Docker镜像
     - name: 构建镜像
       run: |
-        docker build -t $crpi-awpzezftnb095rf0{{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }} .
+        docker build -t ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }} .
         
     # 5. 登录阿里云ACR
     - name: 登录ACR
