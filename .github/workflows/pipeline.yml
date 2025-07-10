@@ -16,18 +16,18 @@ env:
 jobs:
   train-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     # 1. 检出代码
     - name: 检出代码
       uses: actions/checkout@v3
-      
+
     # 2. 设置Python环境（清华源加速）
     - name: 设置Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.12'
-        
+
     - name: 安装依赖
       run: |
         pip install --upgrade pip
@@ -46,6 +46,7 @@ jobs:
     # 4. 构建Docker镜像
     - name: 构建镜像
       run: |
+        docker build -t $crpi-awpzezftnb095rf0{{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }} .
         docker build -t ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }} .
         
     # 5. 登录阿里云ACR
@@ -55,7 +56,7 @@ jobs:
         registry: ${{ env.REGISTRY }}
         username: ${{ secrets.ALIYUN_ACR_USERNAME }}
         password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
-        
+
     # 6. 推送镜像到ACR
     - name: 推送镜像
       run: |
@@ -63,32 +64,23 @@ jobs:
         
     # 7. 服务器部署
     - name: 服务器部署
-    uses: appleboy/ssh-action@v1
-    with:
-      host: ${{ secrets.SERVER_IP }}
-      username: ${{ secrets.SERVER_USER }}
-      key: ${{ secrets.SSH_PRIVATE_KEY }}
-      port: 22  # 明确指定端口
-      script_timeout: 5m  # 增加超时时间
-      script: |
-        echo "连接成功！"
-        docker login -u 本届最靓的仔 crpi-awpzezftnb095rf0.cn-hangzhou.personal.cr.aliyuncs.com
-        docker pull ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
-        docker stop mnist-container || true
-        docker rm mnist-container || true
-        docker run -d \
-          --name mnist-container \
-          -p 5000:5000 \
-          -p 8000:8000 \
-          ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
-
-      - name: SSH连接测试
       uses: appleboy/ssh-action@v1
       with:
-      host: ${{ secrets.SERVER_IP }}
-      username: ${{ secrets.SERVER_USER }}
-      key: ${{ secrets.SSH_PRIVATE_KEY }}
-      script: |
-        echo "SSH连接成功！"
-        whoami
-        pwd
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          # 登录阿里云ACR
+          docker login -u ${{ secrets.ALIYUN_ACR_USERNAME }} -p ${{ secrets.ALIYUN_ACR_PASSWORD }} ${{ env.REGISTRY }}
+          
+          # 拉取最新镜像
+          docker pull ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
+          
+          # 重启容器
+          docker stop mnist-container || true
+          docker rm mnist-container || true
+          docker run -d \
+            --name mnist-container \
+            -p 5000:5000 \
+            -p 8000:8000 \
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
