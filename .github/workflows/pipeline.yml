@@ -7,10 +7,10 @@ on:
     - cron: '0 0 * * 0'  # 每周日UTC时间00:00（北京时间周一8:00）
 
 env:
-  # 阿里云ACR配置（替换为您的实际信息）
-  REGISTRY: registry.cn-hangzhou.aliyuncs.com  # 仓库地域地址
-  NAMESPACE: ai-mnist                          # 命名空间名称
-  REPOSITORY: mnist-api                        # 仓库名称
+  # 替换为您的个人版ACR地址
+  REGISTRY: crpi-awpzezftnb095rf0.cn-hangzhou.personal.cr.aliyuncs.com
+  NAMESPACE: ai-mnist
+  REPOSITORY: mnist-api
   IMAGE_TAG: latest
 
 jobs:
@@ -46,7 +46,7 @@ jobs:
     # 4. 构建Docker镜像
     - name: 构建镜像
       run: |
-        docker build -t ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }} .
+        docker build -t $crpi-awpzezftnb095rf0{{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }} .
         
     # 5. 登录阿里云ACR
     - name: 登录ACR
